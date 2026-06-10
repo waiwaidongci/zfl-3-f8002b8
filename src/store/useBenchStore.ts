@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Bench, BenchExperience, MaterialType, OrientationType, ShadeLevelType, NoiseLevelType } from '@/types';
-import { loadBenches, saveBenches } from '@/utils/storage';
+import { loadBenches, saveBenches, clearBenches, exportBenchesToJSON, downloadJSONFile, validateBenchesData, type ValidationResult } from '@/utils/storage';
 import { generateId } from '@/utils/comfort';
 import { mockBenches } from '@/data/mockBenches';
 
@@ -12,6 +12,12 @@ interface BenchState {
   shadeFilter: ShadeLevelType | null;
   noiseFilter: NoiseLevelType | null;
   initialized: boolean;
+}
+
+interface ImportResult {
+  success: boolean;
+  importedCount: number;
+  overwrittenCount: number;
 }
 
 interface BenchActions {
@@ -30,6 +36,10 @@ interface BenchActions {
   updateExperience: (benchId: string, expId: string, updates: Partial<BenchExperience>) => void;
   deleteExperience: (benchId: string, expId: string) => void;
   getFilteredBenches: () => Bench[];
+  exportData: () => void;
+  validateImportData: (data: unknown) => ValidationResult;
+  importBenches: (benchesToImport: Bench[]) => ImportResult;
+  clearAllData: () => void;
 }
 
 const initialState: BenchState = {
@@ -173,5 +183,48 @@ export const useBenchStore = create<BenchState & BenchActions>((set, get) => ({
       
       return true;
     });
+  },
+
+  exportData: () => {
+    const { benches } = get();
+    const json = exportBenchesToJSON(benches);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadJSONFile(json, `bench-archive-${dateStr}.json`);
+  },
+
+  validateImportData: (data: unknown) => {
+    return validateBenchesData(data);
+  },
+
+  importBenches: (benchesToImport: Bench[]) => {
+    const { benches: currentBenches } = get();
+    const importIds = new Set(benchesToImport.map((b) => b.id));
+
+    let overwrittenCount = 0;
+
+    const mergedBenches = [...benchesToImport];
+    currentBenches.forEach((bench) => {
+      if (!importIds.has(bench.id)) {
+        mergedBenches.push(bench);
+      } else {
+        overwrittenCount++;
+      }
+    });
+
+    const importedCount = benchesToImport.length;
+
+    set({ benches: mergedBenches });
+    saveBenches(mergedBenches);
+
+    return {
+      success: true,
+      importedCount,
+      overwrittenCount,
+    };
+  },
+
+  clearAllData: () => {
+    clearBenches();
+    set({ benches: [], searchQuery: '', materialFilter: null, orientationFilter: null, shadeFilter: null, noiseFilter: null });
   },
 }));

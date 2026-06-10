@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, List, Trophy, Plus, TreeDeciduous } from 'lucide-react';
+import { MapPin, List, Trophy, Plus, TreeDeciduous, Database } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -52,13 +52,26 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <button
-            onClick={() => navigate('/add')}
-            className="flex items-center gap-1.5 px-4 py-2 bg-ochre text-white rounded-lg font-medium text-sm hover:bg-ochre-light transition-colors shadow-md hover:shadow-lg"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">添加长椅</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/backup')}
+              title="数据备份与恢复"
+              className={`flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-all ${
+                isActive('/backup')
+                  ? 'bg-moss-green text-white shadow-md'
+                  : 'text-ink-light hover:bg-deep-brown/5 hover:text-deep-brown'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => navigate('/add')}
+              className="flex items-center gap-1.5 px-4 py-2 bg-ochre text-white rounded-lg font-medium text-sm hover:bg-ochre-light transition-colors shadow-md hover:shadow-lg"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">添加长椅</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
